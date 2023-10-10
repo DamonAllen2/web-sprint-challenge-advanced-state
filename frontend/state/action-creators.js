@@ -1,6 +1,13 @@
 // ❗ You don't need to add extra action creators to achieve MVP
 import axios from 'axios'
-import { MOVE_CLOCKWISE, MOVE_COUNTERCLOCKWISE, SET_QUIZ_INTO_STATE, SET_QUIZ_NULL, SET_SELECTED_ANSWER, SET_INFO_MESSAGE } from './action-types'
+import { MOVE_CLOCKWISE, 
+  MOVE_COUNTERCLOCKWISE, 
+  SET_QUIZ_INTO_STATE, 
+  SET_QUIZ_NULL, 
+  SET_SELECTED_ANSWER, 
+  SET_INFO_MESSAGE,
+  INPUT_CHANGE,
+  RESET_FORM } from './action-types'
 
 export function moveClockwise(newState) {
   if (newState > 5) {
@@ -34,9 +41,13 @@ export function setQuizData(data) {
   return {type: SET_QUIZ_INTO_STATE, payload: data}
 }
 
-export function inputChange() { }
+export function inputChange(target, value) { 
+  return {type: INPUT_CHANGE, target: target, value: value}
+}
 
-export function resetForm() { }
+export function resetForm() {
+  return {type: RESET_FORM}
+}
 
 // ❗ Async action creators
 export const fetchQuiz = () => dispatch => {
@@ -62,16 +73,26 @@ export const postAnswer = (questionId, quizId) => dispatch => {
     dispatch(setMessage(res.data.message));
     dispatch(fetchQuiz())
   })
+  .catch(err => dispatch(setMessage(err)))
     // On successful POST:
     // - Dispatch an action to reset the selected answer state
     // - Dispatch an action to set the server message to state
     // - Dispatch the fetching of the next quiz
 }
-export function postQuiz() {
-  return function (dispatch) {
+export const postQuiz = (newQuestion, newTrueAnswer, newFalseAnswer) => dispatch => {
+  axios.post('http://localhost:9000/api/quiz/new', {
+    "question_text": newQuestion,
+    "true_answer_text": newTrueAnswer,
+    "false_answer_text": newFalseAnswer
+  })
+  .then((res) => {
+    console.log(res);
+    dispatch(setMessage(`Congrats: "${newQuestion}" is a great question!`));
+    dispatch(resetForm());
+  })
+  .catch(err => dispatch(setMessage(err)))
     // On successful POST:
     // - Dispatch the correct message to the the appropriate state
     // - Dispatch the resetting of the form
-  }
 }
 // ❗ On promise rejections, use log statements or breakpoints, and put an appropriate error message in state
